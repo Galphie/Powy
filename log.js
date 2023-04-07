@@ -33,14 +33,12 @@ const colours = {
     }
 };
 
-const info = (log) => console.log("[INFO] " + log)
-const success = (log) => console.log(colours.fg.green + log + colours.reset)
-const warning = (log) => console.log(colours.fg.yellow + "[WARNING] " + log + colours.reset)
-const error = (log) => console.log(colours.fg.red + "[ERROR] " + log + colours.reset)
-
-module.exports = {
-    info,
-    success,
-    warning,
-    error
+const Log = {
+    showMessage: (author, message) => console.log(colours.fg.black + colours.bg.white + author + ":" + colours.reset, message + "\n"),
+    info: (log) => console.log("[INFO] " + log),
+    success: (log) => console.log(colours.fg.green + log + colours.reset),
+    warning: (log) => console.log(colours.fg.yellow + "[WARNING] " + log + colours.reset),
+    error: (log) => console.log(colours.fg.red + "[ERROR] " + log + colours.reset)
 }
+
+module.exports = Log
