@@ -5,8 +5,10 @@ moment.locale('es')
 // Lista de espera para los turnos
 let turnos = [];
 let canalAModerar;
+let quiereCerrar = false;
+let param;
 
-function init(client, config) {
+const init = (client, config) => {
 
     client.once('ready', () => {
         console.clear();
@@ -15,63 +17,137 @@ function init(client, config) {
     });
 
     client.on('messageCreate', async (message) => {
+
+        if (message.content.includes(" ") && message.content.startsWith("!")) {
+            param = message.content.split(" ")[1];
+            message.content = message.content.split(" ")[0]
+        }
+
         if (message.author.id !== client.user.id) {
             Log.info('Se ha recibido un mensaje');
             Log.showMessage(message.author.tag, message.content);
 
-            //Comando '!moderar', para establecer el canal en el que se va a necesitar moderación
+            //Comando '!moderar', para establecer el canal en el que se va a necesitar moderación. Solo los que tengan rol 'Moderador' podrán usarlo
             if (message.content === `${config.prefix}moderar`) {
-                canalAModerar = message.channel;
-                Log.info(`Canal a moderar: #${canalAModerar.name}`);
-                canalAModerar.send(`Se ha establecido el canal ${canalAModerar} como canal a moderar`)
+                if (message.member.roles.cache.some(role => role.name === 'Moderador')) {
+                    if (message.channel !== canalAModerar) {
+                        turnos = [];
+                        canalAModerar = message.channel;
+                        Log.info(`Canal a moderar: #${canalAModerar.name}`);
+                        canalAModerar.send(`Se ha establecido el canal ${canalAModerar} como canal a moderar`);
+                    } else {
+                        message.reply('Este canal ya está asignado para moderar.')
+                    }
+                }
             }
 
-            //Comando '!turno', para pedir el turno (añadir usuario a la lista de espera)
+            //Comando '!turno', para pedir el turno (añadir usuario a la lista de espera). Si se añade como parámetro "conclusion", se marcará en la lista como que tiene intención de cerrar.
             if (message.content === `${config.prefix}turno`) {
                 Log.info(`${message.author.tag} ha pedido turno`);
-
-                if (turnos.find(turno => turno.usuario === message.author)) {
-                    Log.warning('Usuario ya incluido en la lista')
-                    message.reply('Ya pediste un turno.');
-                    return;
+                if (canalAModerar) {
+                    if (message.channel === canalAModerar) {
+                        if (turnos.find(turno => turno.usuario === message.author)) {
+                            Log.warning('Usuario ya incluido en la lista')
+                            message.reply('Ya pediste un turno.');
+                            return;
+                        }
+                        if (param === 'conclusion') {
+                            quiereCerrar = true;
+                        }
+                        const nuevoTurno = {
+                            usuario: message.author,
+                            hora: moment(),
+                            cierraTema: quiereCerrar
+                        };
+                        turnos.push(nuevoTurno);
+                        message.react('📝')
+                            .then(() => message.reply('Solicitud de turno registrada.'));
+                        quiereCerrar = false;
+                    } else {
+                        message.reply(`Solo se pueden utilizar los comandos en el canal ${canalAModerar}.`);
+                    }
+                } else {
+                    message.reply('Para poder utilizar los comandos en este canal, debes asignarlo para moderación con el comando "!moderar"');
                 }
-                const nuevoTurno = {
-                    usuario: message.author,
-                    hora: moment()
-                };
-                turnos.push(nuevoTurno);
-                message.reply('Solicitud de turno registrada.');
             }
 
             //Comando '!siguiente', para cambiar de turno en la lista. Solo los que tengan rol 'Moderador' podrán usarlo
             if (message.content === `${config.prefix}siguiente`) {
-                //TODO: controlar que solo pueda usarlo un moderador
-                if(canalAModerar) {
-                    if(turnos.length > 0) {
-                        const nextUser = turnos[0].usuario;
-                        canalAModerar.send(`${nextUser}, ¡es tu turno!`);
-                        turnos.shift();
+                if (message.member.roles.cache.some(role => role.name === 'Moderador')) {
+                    if (canalAModerar) {
+                        if (message.channel === canalAModerar) {
+                            if (turnos.length > 0) {
+                                const nextUser = turnos[0].usuario;
+                                canalAModerar.send(`${nextUser}, ¡es tu turno!`);
+                                turnos.shift();
+                            } else {
+                                message.reply("Vaya, parece que no hay nadie en la lista")
+                            }
+                        } else {
+                            message.reply(`Solo se pueden utilizar los comandos en el canal ${canalAModerar}.`);
+                        }
                     } else {
-                        message.reply("Vaya, parece que no hay nadie en la lista")
+                        message.reply('Para poder utilizar los comandos en este canal, debes asignarlo para moderación con el comando "!moderar"')
                     }
-                } else {
-                    message.reply(`Parece que no hay ningún canal a moderar seleccionado. Usa el comando '!moderar' para seleccionar este`)
                 }
             }
 
             //Comando '!listaTurnos', para ver la lista de espera
             if (message.content === `${config.prefix}listaTurnos`) {
-                if (turnos.length > 0) {
-                    let respuesta = "**__Lista de espera__**\n\n";
-                    turnos.forEach(turno => {
-                        respuesta += `${turno.usuario} *(${turno.hora.fromNow()})*` + "\n"
-                    });
-                    message.reply(respuesta);
+                if (canalAModerar) {
+                    if (message.channel === canalAModerar) {
+                        if (turnos.length > 0) {
+                            let respuesta = "**__Lista de espera__**\n\n";
+                            turnos.forEach(turno => {
+                                respuesta += `${turno.usuario} ${(turno.cierraTema ? "🫶" : "")} *(${turno.hora.fromNow()})*` + "\n"
+                            });
+                            message.reply(respuesta);
+                        } else {
+                            message.reply("Vaya, parece que no hay nadie en la lista")
+                        }
+                    } else {
+                        message.reply(`Solo se pueden utilizar los comandos en el canal ${canalAModerar}.`);
+                    }
                 } else {
-                    message.reply("Vaya, parece que no hay nadie en la lista")
+                    message.reply('Para poder utilizar los comandos en este canal, debes asignarlo para moderación con el comando "!moderar"')
                 }
             }
 
+            //Comando '!eliminame', para quitarte de la lista de espera si ya no quieres hablar
+            if (message.content === `${config.prefix}eliminame`) {
+                if (canalAModerar) {
+                    if (message.channel === canalAModerar) {
+                        if (turnos.find(turno => turno.usuario === message.author)) {
+                            turnos.splice(turnos.indexOf(message.author));
+                            message.reply('Te he eliminado de la lista, como has pedido');
+                        } else {
+                            message.reply('No estás en la lista de espera, así que no te he tenido que eliminar')
+                        }
+                    } else {
+                        message.reply(`Solo se pueden utilizar los comandos en el canal ${canalAModerar}.`);
+                    }
+                } else {
+                    message.reply('Para poder utilizar los comandos en este canal, debes asignarlo para moderación con el comando "!moderar"')
+                }
+            }
+
+            //Comando '!limpiar', para vaciar la lista de espera al terminar un punto
+            if (message.content === `${config.prefix}limpiar`) {
+                if (canalAModerar) {
+                    if (message.channel === canalAModerar) {
+                        if (message.member.roles.cache.some(role => role.name === 'Moderador')) {
+                            turnos = [];
+                            message.reply('Lista de espera vaciada');
+                        }
+                    } else {
+                        message.reply(`Solo se pueden utilizar los comandos en el canal ${canalAModerar}.`);
+                    }
+                } else {
+                    message.reply('Para poder utilizar los comandos en este canal, debes asignarlo para moderación con el comando "!moderar"')
+                }
+            }
+
+            //TODO: comando '!help'
             if (message.content === `${config.prefix}test`) {
 
                 message.reply(canalAModerar.name);
