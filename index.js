@@ -11,7 +11,6 @@ const client = new Client({
     ]
 });
 
-
 Powy.init(client, config);
 
 client.login(config.token);
