@@ -1,8 +1,18 @@
 const moment = require('moment/moment');
+const Util = require('./util');
 const Log = require('./log');
 
-moment.locale('es')
-// Lista de espera para los turnos
+moment.locale('es');
+
+const comandos = [
+    { "comando": "!moderar", "descripcion": "Para establecer el canal en el que se va a necesitar moderación. __Esto limpiará la lista de espera__", "disponibilidad": "Moderador" },
+    { "comando": "!turno", "descripcion": "Para pedir el turno. Si se añade como parámetro 'conclusion', se marcará en la lista como que tiene intención de cerrar.", "disponibilidad": "Cualquiera" },
+    { "comando": "!siguiente", "descripcion": "Para cambiar al siguiente turno de la lista.", "disponibilidad": "Moderador" },
+    { "comando": "!listaTurnos", "descripcion": "Para ver la lista de espera.", "disponibilidad": "Cualquiera" },
+    { "comando": "!eliminame", "descripcion": "Para quitarte de la lista de espera, si ya no quieres hablar.", "disponibilidad": "Cualquiera" },
+    { "comando": "!limpiar", "descripcion": "Para limpiar la lista de espera.", "disponibilidad": "Moderador" },
+    { "comando": "!help", "descripcion": "Para mostrar esta lista de comandos tan chula.", "disponibilidad": "Cualquiera" },
+]
 let turnos = [];
 let canalAModerar;
 let quiereCerrar = false;
@@ -20,7 +30,7 @@ const init = (client, config) => {
 
         if (message.content.includes(" ") && message.content.startsWith("!")) {
             param = message.content.split(" ")[1];
-            message.content = message.content.split(" ")[0]
+            message.content = message.content.split(" ")[0];
         }
 
         if (message.author.id !== client.user.id) {
@@ -36,7 +46,7 @@ const init = (client, config) => {
                         Log.info(`Canal a moderar: #${canalAModerar.name}`);
                         canalAModerar.send(`Se ha establecido el canal ${canalAModerar} como canal a moderar`);
                     } else {
-                        message.reply('Este canal ya está asignado para moderar.')
+                        message.reply('Este canal ya está asignado para moderar.');
                     }
                 }
             }
@@ -47,7 +57,7 @@ const init = (client, config) => {
                 if (canalAModerar) {
                     if (message.channel === canalAModerar) {
                         if (turnos.find(turno => turno.usuario === message.author)) {
-                            Log.warning('Usuario ya incluido en la lista')
+                            Log.warning('Usuario ya incluido en la lista');
                             message.reply('Ya pediste un turno.');
                             return;
                         }
@@ -81,13 +91,13 @@ const init = (client, config) => {
                                 canalAModerar.send(`${nextUser}, ¡es tu turno!`);
                                 turnos.shift();
                             } else {
-                                message.reply("Vaya, parece que no hay nadie en la lista")
+                                message.reply("Vaya, parece que no hay nadie en la lista");
                             }
                         } else {
                             message.reply(`Solo se pueden utilizar los comandos en el canal ${canalAModerar}.`);
                         }
                     } else {
-                        message.reply('Para poder utilizar los comandos en este canal, debes asignarlo para moderación con el comando "!moderar"')
+                        message.reply('Para poder utilizar los comandos en este canal, debes asignarlo para moderación con el comando "!moderar"');
                     }
                 }
             }
@@ -103,13 +113,13 @@ const init = (client, config) => {
                             });
                             message.reply(respuesta);
                         } else {
-                            message.reply("Vaya, parece que no hay nadie en la lista")
+                            message.reply("Vaya, parece que no hay nadie en la lista");
                         }
                     } else {
                         message.reply(`Solo se pueden utilizar los comandos en el canal ${canalAModerar}.`);
                     }
                 } else {
-                    message.reply('Para poder utilizar los comandos en este canal, debes asignarlo para moderación con el comando "!moderar"')
+                    message.reply('Para poder utilizar los comandos en este canal, debes asignarlo para moderación con el comando "!moderar"');
                 }
             }
 
@@ -121,13 +131,13 @@ const init = (client, config) => {
                             turnos.splice(turnos.indexOf(message.author));
                             message.reply('Te he eliminado de la lista, como has pedido');
                         } else {
-                            message.reply('No estás en la lista de espera, así que no te he tenido que eliminar')
+                            message.reply('No estás en la lista de espera, así que no te he tenido que eliminar');
                         }
                     } else {
                         message.reply(`Solo se pueden utilizar los comandos en el canal ${canalAModerar}.`);
                     }
                 } else {
-                    message.reply('Para poder utilizar los comandos en este canal, debes asignarlo para moderación con el comando "!moderar"')
+                    message.reply('Para poder utilizar los comandos en este canal, debes asignarlo para moderación con el comando "!moderar"');
                 }
             }
 
@@ -143,15 +153,21 @@ const init = (client, config) => {
                         message.reply(`Solo se pueden utilizar los comandos en el canal ${canalAModerar}.`);
                     }
                 } else {
-                    message.reply('Para poder utilizar los comandos en este canal, debes asignarlo para moderación con el comando "!moderar"')
+                    message.reply('Para poder utilizar los comandos en este canal, debes asignarlo para moderación con el comando "!moderar"');
                 }
+            }
+
+            //Comando '!help', para mostrar la lista de comandos
+            if (message.content === `${config.prefix}help`) {
+                console.log(Util.mostrarEnTabla(comandos));
+                message.reply(Util.mostrarEnTabla(comandos));
             }
 
             //TODO: comando '!help'
             if (message.content === `${config.prefix}test`) {
 
                 message.reply(canalAModerar.name);
-                canalAModerar.send("funciona")
+                canalAModerar.send("funciona");
             }
         }
     });
