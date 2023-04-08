@@ -1,19 +1,24 @@
-const mostrarEnTabla = (lista) => {
+const Log = require('./log');
+
+const mostrarOrdenado = (lista) => {
     let resultado = '';
 
-    resultado += '| Comando | Descripción | Disponibilidad |\n';
-    resultado += '|---------|-------------|-----------------|\n';
-
     lista.forEach(elemento => {
-        resultado += `| ${elemento.comando} | ${elemento.descripcion} | ${elemento.disponibilidad} |\n`;
+        resultado += `> **${elemento.comando}**\n${elemento.descripcion} \n| ¿Quién puede usarlo? -> *${elemento.disponibilidad}* |\n\n`;
     });
 
     return resultado;
 
 }
 
+const limpiarCanalAModerar = () => { 
+    canalAModerar = null;
+    Log.info("Canal a moderar eliminado");
+}
+
 const Util = {
-    mostrarEnTabla: mostrarEnTabla
+    mostrarOrdenado: mostrarOrdenado,
+    limpiarCanalAModerar: limpiarCanalAModerar
 }
 
 module.exports = Util;
