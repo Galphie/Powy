@@ -11,11 +11,6 @@ const mostrarOrdenado = (lista) => {
 
 }
 
-const limpiarCanalAModerar = () => {
-    canalAModerar = null;
-    Log.info("Canal a moderar eliminado");
-}
-
 const mostrarListaTurnos = (lista) => {
     let respuesta = "**__Lista de espera__**\n\n";
     lista.forEach(turno => {
@@ -26,7 +21,6 @@ const mostrarListaTurnos = (lista) => {
 
 const Util = {
     mostrarOrdenado: mostrarOrdenado,
-    limpiarCanalAModerar: limpiarCanalAModerar,
     mostrarListaTurnos: mostrarListaTurnos
 }
 

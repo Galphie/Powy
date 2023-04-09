@@ -18,7 +18,7 @@ let turnos = [];
 let canalAModerar;
 let quiereCerrar = false;
 let param;
-let temporizador = setTimeout(Util.limpiarCanalAModerar, 3600000);
+let temporizador = setTimeout(() => canalAModerar = null, 3600000);
 let cooldownOn = false;
 
 const init = (client) => {
@@ -31,7 +31,7 @@ const init = (client) => {
 
     client.on('messageCreate', async (message) => {
         clearTimeout(temporizador);
-        temporizador = setTimeout(Util.limpiarCanalAModerar, 3600000);
+        temporizador = setTimeout(() => canalAModerar = null, 3600000);
 
         if (message.content.includes(" ") && (message.content.startsWith("!") || message.content.includes("☝️"))) {
             param = message.content.split(" ")[1];
