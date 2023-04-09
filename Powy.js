@@ -110,11 +110,7 @@ const init = (client, config) => {
                 if (canalAModerar) {
                     if (message.channel === canalAModerar) {
                         if (turnos.length > 0) {
-                            let respuesta = "**__Lista de espera__**\n\n";
-                            turnos.forEach(turno => {
-                                respuesta += `${turno.usuario} ${(turno.cierraTema ? "🫶" : "")} *(${turno.hora.fromNow()})*` + "\n"
-                            });
-                            message.reply(respuesta);
+                            message.reply(Util.mostrarListaTurnos(turnos));
                         } else {
                             message.reply("Vaya, parece que no hay nadie en la lista");
                         }
@@ -131,7 +127,7 @@ const init = (client, config) => {
                 if (canalAModerar) {
                     if (message.channel === canalAModerar) {
                         if (turnos.find(turno => turno.usuario === message.author)) {
-                            turnos.splice(turnos.indexOf(message.author));
+                            turnos.splice(turnos.findIndex(turno => turno.usuario === message.author), 1);
                             message.reply('Te he eliminado de la lista, como has pedido');
                         } else {
                             message.reply('No estás en la lista de espera, así que no te he tenido que eliminar');
