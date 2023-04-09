@@ -1,6 +1,7 @@
 const moment = require('moment/moment');
 const Util = require('./util');
 const Log = require('./log');
+const config = require('./config.json');
 
 moment.locale('es');
 
@@ -19,7 +20,7 @@ let quiereCerrar = false;
 let param;
 let temporizador = setTimeout(Util.limpiarCanalAModerar, 3600000);
 
-const init = (client, config) => {
+const init = (client) => {
 
     client.once('ready', () => {
         console.clear();

@@ -1,5 +1,5 @@
+require('dotenv').config();
 const { Client, GatewayIntentBits } = require('discord.js');
-const config = require('./config.json');
 const Powy = require('./Powy');
 
 const client = new Client({
@@ -11,7 +11,7 @@ const client = new Client({
     ]
 });
 
-Powy.init(client, config);
+Powy.init(client);
 
-client.login(config.token);
+client.login(process.env.token);
 
