@@ -7,9 +7,9 @@ moment.locale('es');
 
 const comandos = [
     { "comando": "!moderar", "descripcion": "Para establecer el canal en el que se va a necesitar moderación. __Esto limpiará la lista de espera.__", "disponibilidad": "Moderador" },
-    { "comando": "!turno/☝️", "descripcion": "Para pedir el turno. Si se añade como parámetro 'conclusion', se marcará en la lista como que tiene intención de cerrar. Ejemplo: '!turno conclusion'", "disponibilidad": "Cualquiera" },
+    { "comando": "!turno /☝️", "descripcion": "Para pedir el turno. Si se añade como parámetro 'conclusion', se marcará en la lista como que tiene intención de cerrar. Ejemplo: '!turno conclusion'", "disponibilidad": "Cualquiera" },
     { "comando": "!siguiente", "descripcion": "Para cambiar al siguiente turno de la lista.", "disponibilidad": "Moderador" },
-    { "comando": "!listaTurnos/!lista", "descripcion": "Para ver la lista de espera.", "disponibilidad": "Cualquiera" },
+    { "comando": "!listaTurnos / !lista", "descripcion": "Para ver la lista de espera.", "disponibilidad": "Cualquiera" },
     { "comando": "!eliminame", "descripcion": "Para quitarte de la lista de espera, si ya no quieres hablar.", "disponibilidad": "Cualquiera" },
     { "comando": "!limpiar", "descripcion": "Para limpiar la lista de espera.", "disponibilidad": "Moderador" },
     { "comando": "!help", "descripcion": "Para mostrar esta lista de comandos tan chula.", "disponibilidad": "Cualquiera" }
@@ -19,6 +19,7 @@ let canalAModerar;
 let quiereCerrar = false;
 let param;
 let temporizador = setTimeout(Util.limpiarCanalAModerar, 3600000);
+let cooldownOn = false;
 
 const init = (client) => {
 
@@ -38,9 +39,6 @@ const init = (client) => {
         }
 
         if (message.author.id !== client.user.id) {
-            Log.info('Se ha recibido un mensaje');
-            Log.showMessage(message.author.tag, message.content);
-
             switch (message.content) {
                 //Comando '!moderar', para establecer el canal en el que se va a necesitar moderación. Solo los que tengan rol 'Moderador' podrán usarlo
                 case `${config.prefix}moderar`:
@@ -53,6 +51,8 @@ const init = (client) => {
                         } else {
                             message.reply('Este canal ya está asignado para moderar.');
                         }
+                    } else {
+                        message.author.send('¡Hola! Antes de nada, te informo de que te mando este mensaje privado porque es mejor no saturar el servidor 😜.\n\nSi no tienes el rol de "Moderador" no vas a poder utilizar determinados comandos en el servidor.\nSi utilizas el comando "!help" en el servidor, podrás ver qué comandos puedes utilizar.')
                     }
                     break;
                 //Comando '!turno', para pedir el turno (añadir usuario a la lista de espera). Si se añade como parámetro "conclusion", se marcará en la lista como que tiene intención de cerrar.
@@ -103,6 +103,8 @@ const init = (client) => {
                         } else {
                             message.reply('Para poder utilizar los comandos en este canal, debes asignarlo para moderación con el comando "!moderar"');
                         }
+                    } else {
+                        message.author.send('¡Hola! Antes de nada, te informo de que te mando este mensaje privado porque es mejor no saturar el servidor 😜.\n\nSi no tienes el rol de "Moderador" no vas a poder utilizar determinados comandos en el servidor.\nSi utilizas el comando "!help" en el servidor, podrás ver qué comandos puedes utilizar.')
                     }
                     break;
                 //Comando '!listaTurnos', para ver la lista de espera
@@ -141,18 +143,22 @@ const init = (client) => {
                     break;
                 //Comando '!limpiar', para vaciar la lista de espera al terminar un punto
                 case `${config.prefix}limpiar`:
-                    if (canalAModerar) {
-                        if (message.channel === canalAModerar) {
-                            if (message.member.roles.cache.some(role => role.name === 'Moderador')) {
+                    if (message.member.roles.cache.some(role => role.name === 'Moderador')) {
+                        if (canalAModerar) {
+                            if (message.channel === canalAModerar) {
                                 turnos = [];
                                 message.reply('Lista de espera vaciada');
+
+                            } else {
+                                message.reply(`Solo se pueden utilizar los comandos en el canal ${canalAModerar}.`);
                             }
                         } else {
-                            message.reply(`Solo se pueden utilizar los comandos en el canal ${canalAModerar}.`);
+                            message.reply('Para poder utilizar los comandos en este canal, debes asignarlo para moderación con el comando "!moderar"');
                         }
                     } else {
-                        message.reply('Para poder utilizar los comandos en este canal, debes asignarlo para moderación con el comando "!moderar"');
+                        message.author.send('¡Hola! Antes de nada, te informo de que te mando este mensaje privado porque es mejor no saturar el servidor 😜.\n\nSi no tienes el rol de "Moderador" no vas a poder utilizar determinados comandos en el servidor.\nSi utilizas el comando "!help" en el servidor, podrás ver qué comandos puedes utilizar.')
                     }
+
                     break;
                 //Comando '!help', para mostrar la lista de comandos
                 case `${config.prefix}help`:
@@ -165,8 +171,15 @@ const init = (client) => {
                 //Comandos graciosos
                 case `${config.prefix}hlep`:
                 case `${config.prefix}truno`:
+                case `${config.prefix}tuno`:
                 case `${config.prefix}turnos`:
-                    message.reply(`Vaya, vaya, parece que ${message.author} se ha levantado un poco disxélico hoy :see_no_evil: `);
+                case `${config.prefix}lita`:
+                case `${config.prefix}lsita`:
+                    if (!cooldownOn) {
+                        message.reply(`Vaya, vaya, parece que ${message.author} se ha levantado un poco disxélico hoy :see_no_evil: `);
+                        cooldownOn = true;
+                        setTimeout(() => cooldownOn = false, 30000);
+                    }
                     break;
                 case '🖕':
                     message.react('😡');
@@ -174,8 +187,11 @@ const init = (client) => {
                 case '👆':
                     message.react('🙄');
                     break;
+                case '☟':
+                    message.reply(`${message.author}, dale la vuelta al móvil, anda.`)
             }
 
+            //TODO: Contador por usuario para que deje de dar por culo. Mr Increíble
             // if (message.content === `${config.prefix}test`) {
 
             //     message.reply(canalAModerar.name);
