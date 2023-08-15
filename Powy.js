@@ -165,9 +165,7 @@ const init = (client) => {
                     message.reply(config.welcome)
                     setTimeout(() => message.channel.send(Util.mostrarOrdenado(comandos)), 1500);
                     break;
-
-
-
+                
                 //Comandos graciosos
                 case `${config.prefix}hlep`:
                 case `${config.prefix}truno`:

@@ -11,10 +11,6 @@ const client = new Client({
     ]
 });
 
-// client.on('messageCreate', async (message) => {
-//     message.author.se
-// }
-
 Powy.init(client);
 
 client.login(process.env.TOKEN);
